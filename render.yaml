@@ -9,7 +9,7 @@ services:
     name: billing-software
     runtime: docker
     plan: free
-    dockerfilePath: ./Dockerfile.render
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
