@@ -1,0 +1,34 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: billing-db
+    env: docker
+    plan: free
+    region: singapore
+    
+  # Spring Boot Application
+  - type: web
+    name: billing-software
+    env: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: billing-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: billing-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: billing-db
+          property: password
+      - key: SPRING_JPA_HIBERNATE_DDL_AUTO
+        value: none
+      - key: SPRING_FLYWAY_ENABLED
+        value: true
