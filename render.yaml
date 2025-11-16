@@ -2,17 +2,14 @@ services:
   # PostgreSQL Database
   - type: pserv
     name: billing-db
-    env: docker
     plan: free
-    region: singapore
     
   # Spring Boot Application
   - type: web
     name: billing-software
-    env: docker
+    runtime: docker
     plan: free
-    region: singapore
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./Dockerfile.render
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -29,6 +26,6 @@ services:
           name: billing-db
           property: password
       - key: SPRING_JPA_HIBERNATE_DDL_AUTO
-        value: none
+        value: validate
       - key: SPRING_FLYWAY_ENABLED
         value: true
