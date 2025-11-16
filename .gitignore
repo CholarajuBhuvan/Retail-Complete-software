@@ -1,0 +1,35 @@
+# Maven
+billingsoftware/target/
+billingsoftware/.mvn/
+billingsoftware/mvnw
+billingsoftware/mvnw.cmd
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Build artifacts
+*.class
+*.jar
+*.war
+*.ear
+
+# Client node_modules if any
+client/node_modules/
+client/dist/

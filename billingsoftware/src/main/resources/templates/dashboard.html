@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, 'dashboard', 'Dashboard')}">
+<body>
+<div th:fragment="content">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Dashboard</h1>
+    
+    <div id="dashboard-content">
+        <div class="text-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            Promise.all([
+                $.get('/api/dashboard/overview'),
+                $.get('/api/dashboard/quick-stats'),
+                $.get('/api/dashboard/inventory-alerts')
+            ]).then(function([overview, quickStats, inventoryAlerts]) {
+                let html = '';
+                
+                // Overview Stats
+                html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">';
+                html += '<div class="bg-white rounded-lg shadow p-6">';
+                html += '<div class="text-sm text-gray-600">Total Sales</div>';
+                html += '<div class="text-2xl font-bold text-blue-600">₹' + parseFloat(overview.totalSales || 0).toFixed(2) + '</div>';
+                html += '<div class="text-xs text-gray-500 mt-1">From ' + (overview.totalOrders || 0) + ' orders</div>';
+                html += '</div>';
+                html += '<div class="bg-white rounded-lg shadow p-6">';
+                html += '<div class="text-sm text-gray-600">Total Products</div>';
+                html += '<div class="text-2xl font-bold text-green-600">' + (overview.totalProducts || 0) + '</div>';
+                html += '<div class="text-xs text-gray-500 mt-1">' + (overview.activeProducts || 0) + ' active</div>';
+                html += '</div>';
+                html += '<div class="bg-white rounded-lg shadow p-6">';
+                html += '<div class="text-sm text-gray-600">Total Customers</div>';
+                html += '<div class="text-2xl font-bold text-purple-600">' + (overview.totalCustomers || 0) + '</div>';
+                html += '</div>';
+                html += '<div class="bg-white rounded-lg shadow p-6">';
+                html += '<div class="text-sm text-gray-600">Low Stock Items</div>';
+                html += '<div class="text-2xl font-bold text-red-600">' + (overview.lowStockCount || 0) + '</div>';
+                html += '</div>';
+                html += '</div>';
+
+                // Quick Stats
+                html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">';
+                html += '<div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow p-6">';
+                html += '<div class="text-sm opacity-90">Today\'s Sales</div>';
+                html += '<div class="text-3xl font-bold">₹' + parseFloat(quickStats.todaySales || 0).toFixed(2) + '</div>';
+                html += '<div class="text-xs opacity-75 mt-1">' + (quickStats.todayOrders || 0) + ' orders today</div>';
+                html += '</div>';
+                html += '<div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow p-6">';
+                html += '<div class="text-sm opacity-90">This Week</div>';
+                html += '<div class="text-3xl font-bold">₹' + parseFloat(quickStats.weekSales || 0).toFixed(2) + '</div>';
+                html += '<div class="text-xs opacity-75 mt-1">' + (quickStats.weekOrders || 0) + ' orders</div>';
+                html += '</div>';
+                html += '<div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg shadow p-6">';
+                html += '<div class="text-sm opacity-90">This Month</div>';
+                html += '<div class="text-3xl font-bold">₹' + parseFloat(quickStats.monthSales || 0).toFixed(2) + '</div>';
+                html += '<div class="text-xs opacity-75 mt-1">' + (quickStats.monthOrders || 0) + ' orders</div>';
+                html += '</div>';
+                html += '</div>';
+
+                // Inventory Alerts
+                if (inventoryAlerts && inventoryAlerts.length > 0) {
+                    html += '<div class="bg-white rounded-lg shadow p-6">';
+                    html += '<h2 class="text-xl font-bold mb-4 text-gray-800">Inventory Alerts</h2>';
+                    html += '<div class="overflow-x-auto">';
+                    html += '<table class="min-w-full divide-y divide-gray-200">';
+                    html += '<thead class="bg-gray-50">';
+                    html += '<tr>';
+                    html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>';
+                    html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>';
+                    html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>';
+                    html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>';
+                    html += '</tr>';
+                    html += '</thead>';
+                    html += '<tbody class="bg-white divide-y divide-gray-200">';
+                    inventoryAlerts.forEach(function(item) {
+                        html += '<tr>';
+                        html += '<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">' + item.name + '</td>';
+                        html += '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' + item.sku + '</td>';
+                        html += '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">' + item.stockQuantity + '</td>';
+                        html += '<td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Low Stock</span></td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody>';
+                    html += '</table>';
+                    html += '</div>';
+                    html += '</div>';
+                }
+
+                $('#dashboard-content').html(html);
+            }).catch(function(error) {
+                $('#dashboard-content').html('<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Error loading dashboard data</div>');
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

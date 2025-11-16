@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, 'inventory', 'Inventory')}">
+<body>
+<div th:fragment="content">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Inventory Management</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">Inventory Overview</h2>
+        <p class="text-gray-600">View and manage product inventory levels</p>
+        
+        <div id="inventoryList" class="mt-6 overflow-x-auto">
+            <div class="text-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="mt-4 text-gray-600">Loading inventory...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            loadInventory();
+        });
+
+        function loadInventory() {
+            $.get('/api/products').done(function(products) {
+                let html = '<table class="min-w-full divide-y divide-gray-200">';
+                html += '<thead class="bg-gray-50"><tr>';
+                html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>';
+                html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>';
+                html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Stock</th>';
+                html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>';
+                html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+                
+                products.forEach(function(p) {
+                    const lowStock = p.stockQuantity < 10;
+                    html += '<tr>';
+                    html += '<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">' + p.name + '</td>';
+                    html += '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' + p.sku + '</td>';
+                    html += '<td class="px-6 py-4 whitespace-nowrap text-sm ' + (lowStock ? 'text-red-600 font-bold' : 'text-gray-900') + '">' + p.stockQuantity + '</td>';
+                    html += '<td class="px-6 py-4 whitespace-nowrap">';
+                    if (lowStock) {
+                        html += '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Low Stock</span>';
+                    } else {
+                        html += '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Good</span>';
+                    }
+                    html += '</td>';
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table>';
+                $('#inventoryList').html(html);
+            });
+        }
+    </script>
+</div>
+</body>
+</html>

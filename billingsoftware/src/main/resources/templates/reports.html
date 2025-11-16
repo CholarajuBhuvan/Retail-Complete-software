@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, 'reports', 'Reports')}">
+<body>
+<div th:fragment="content">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Reports</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Low Stock Report -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold mb-4">Low Stock Report</h2>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Threshold</label>
+                <input type="number" id="threshold" value="10" 
+                       class="px-4 py-2 border border-gray-300 rounded-md w-32">
+                <button onclick="fetchLowStock()" class="ml-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Generate</button>
+            </div>
+            <div id="lowStockReport"></div>
+        </div>
+
+        <!-- Sales Report -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold mb-4">Sales Summary</h2>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date From</label>
+                <input type="date" id="salesFrom" class="px-4 py-2 border border-gray-300 rounded-md w-full mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date To</label>
+                <input type="date" id="salesTo" class="px-4 py-2 border border-gray-300 rounded-md w-full mb-2">
+                <button onclick="fetchSales()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Generate</button>
+            </div>
+            <div id="salesReport"></div>
+        </div>
+    </div>
+    
+    <!-- Cashier Sales Report -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">Cashier Sales Report</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Cashier</label>
+                <select id="cashierSelect" class="px-4 py-2 border border-gray-300 rounded-md w-full">
+                    <option value="">-- Select Cashier --</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date From</label>
+                <input type="date" id="cashierFrom" class="px-4 py-2 border border-gray-300 rounded-md w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date To</label>
+                <input type="date" id="cashierTo" class="px-4 py-2 border border-gray-300 rounded-md w-full">
+            </div>
+        </div>
+        <button onclick="fetchCashierReport()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Generate Report</button>
+        <div id="cashierReport" class="mt-4"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            loadCashiers();
+        });
+        
+        function loadCashiers() {
+            $.get('/api/users').done(function(users) {
+                let html = '<option value="">-- Select Cashier --</option>';
+                users.forEach(function(user) {
+                    html += '<option value="' + user.id + '">' + user.fullName + ' (' + user.role + ')</option>';
+                });
+                $('#cashierSelect').html(html);
+            }).fail(function() {
+                console.error('Failed to load cashiers');
+            });
+        }
+        
+        function fetchCashierReport() {
+            const userId = $('#cashierSelect').val();
+            const from = $('#cashierFrom').val();
+            const to = $('#cashierTo').val();
+            
+            if (!userId || !from || !to) {
+                alert('Please select cashier and both dates');
+                return;
+            }
+            
+            const url = '/api/reports/cashier/' + userId + '?from=' + from + 'T00:00:00&to=' + to + 'T23:59:59';
+            
+            $.get(url).done(function(response) {
+                if (response.error) {
+                    $('#cashierReport').html('<p class="text-red-600">Error: ' + response.error + '</p>');
+                    return;
+                }
+                
+                let html = '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">';
+                html += '<div class="bg-blue-50 p-4 rounded"><p class="text-sm text-gray-600">Total Orders</p><p class="text-2xl font-bold text-blue-600">' + response.totalOrders + '</p></div>';
+                html += '<div class="bg-green-50 p-4 rounded"><p class="text-sm text-gray-600">Total Revenue</p><p class="text-2xl font-bold text-green-600">₹' + Number(response.totalRevenue).toFixed(2) + '</p></div>';
+                html += '<div class="bg-purple-50 p-4 rounded"><p class="text-sm text-gray-600">Average Order Value</p><p class="text-2xl font-bold text-purple-600">₹' + Number(response.averageOrderValue).toFixed(2) + '</p></div>';
+                html += '</div>';
+                
+                if (response.orders && response.orders.length > 0) {
+                    html += '<div class="mt-4"><h3 class="text-lg font-semibold mb-2">Order Details</h3>';
+                    html += '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200">';
+                    html += '<thead class="bg-gray-50"><tr><th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Order ID</th><th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Date</th><th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Customer</th><th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Total</th></tr></thead>';
+                    html += '<tbody class="bg-white divide-y divide-gray-200">';
+                    response.orders.forEach(function(order) {
+                        const date = new Date(order.createdAt).toLocaleString();
+                        html += '<tr><td class="px-4 py-2 text-sm">#' + order.id + '</td><td class="px-4 py-2 text-sm">' + date + '</td><td class="px-4 py-2 text-sm">' + (order.customer.name || 'N/A') + '</td><td class="px-4 py-2 text-sm text-right font-medium">₹' + Number(order.total).toFixed(2) + '</td></tr>';
+                    });
+                    html += '</tbody></table></div></div>';
+                }
+                
+                $('#cashierReport').html(html);
+            }).fail(function(xhr) {
+                $('#cashierReport').html('<p class="text-red-600">Error loading report: ' + JSON.stringify(xhr.responseJSON) + '</p>');
+            });
+        }
+        
+        function fetchLowStock() {
+            const threshold = $('#threshold').val();
+            $.get('/api/reports/low-stock?threshold=' + threshold).done(function(response) {
+                const items = response.products || [];
+                let html = '<div class="text-sm">';
+                if (items.length === 0) {
+                    html += '<p class="text-gray-500">No low stock items found</p>';
+                } else {
+                    html += '<p class="font-semibold mb-2">Found ' + items.length + ' items:</p>';
+                    html += '<p class="text-sm text-gray-600 mb-2">Out of Stock: ' + response.summary.outOfStock + '</p>';
+                    html += '<ul class="list-disc list-inside">';
+                    items.forEach(function(item) {
+                        html += '<li>' + item.name + ' (SKU: ' + item.sku + ') - Stock: ' + item.stockQuantity + '</li>';
+                    });
+                    html += '</ul>';
+                }
+                html += '</div>';
+                $('#lowStockReport').html(html);
+            }).fail(function() {
+                $('#lowStockReport').html('<p class="text-red-600">Error loading report</p>');
+            });
+        }
+
+        function fetchSales() {
+            let from = $('#salesFrom').val();
+            let to = $('#salesTo').val();
+            
+            console.log('Raw date values - From:', from, 'To:', to);
+            
+            if (!from || !to) {
+                alert('Please select both dates');
+                return;
+            }
+            
+            // Convert dd-MM-yyyy to yyyy-MM-dd if needed
+            if (from.includes('-')) {
+                const parts = from.split('-');
+                if (parts[0].length === 2) {
+                    // Format is dd-MM-yyyy, convert to yyyy-MM-dd
+                    from = parts[2] + '-' + parts[1] + '-' + parts[0];
+                }
+            }
+            if (to.includes('-')) {
+                const parts = to.split('-');
+                if (parts[0].length === 2) {
+                    // Format is dd-MM-yyyy, convert to yyyy-MM-dd
+                    to = parts[2] + '-' + parts[1] + '-' + parts[0];
+                }
+            }
+            
+            console.log('Converted dates - From:', from, 'To:', to);
+
+            const url = '/api/reports/sales?from=' + from + 'T00:00:00&to=' + to + 'T23:59:59';
+            console.log('Requesting sales report with URL:', url);
+            
+            $.get(url).done(function(response) {
+                console.log('Sales report response:', response);
+                
+                if (response.error) {
+                    $('#salesReport').html('<p class="text-red-600">Error: ' + response.error + '</p>');
+                    return;
+                }
+                
+                let html = '<div class="text-sm">';
+                const totalOrders = response.totalOrders || 0;
+                const totalRevenue = Number(response.totalRevenue) || 0;
+                const avgOrderValue = Number(response.averageOrderValue) || 0;
+                
+                html += '<p class="font-semibold">Total Orders: ' + totalOrders + '</p>';
+                html += '<p class="font-semibold text-lg mt-2">Total Revenue: ₹' + totalRevenue.toFixed(2) + '</p>';
+                html += '<p class="text-sm text-gray-600 mt-2">Average Order Value: ₹' + avgOrderValue.toFixed(2) + '</p>';
+                html += '</div>';
+                $('#salesReport').html(html);
+            }).fail(function(xhr) {
+                console.error('Sales report error:', xhr);
+                $('#salesReport').html('<p class="text-red-600">Error loading report. Response: ' + JSON.stringify(xhr.responseJSON) + '</p>');
+            });
+        }
+    </script>
+</div>
+</body>
+</html>

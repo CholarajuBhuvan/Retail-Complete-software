@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:fragment="layout (content, activePage, pageTitle)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title th:text="${pageTitle} + ' - Billing Software'">Billing Software</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <h1 class="text-xl font-bold text-gray-900">Billing Software</h1>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <!-- Dashboard - Only MANAGER and EMPLOYEE -->
+                        <a th:href="@{/dashboard}" 
+                           sec:authorize="hasAnyRole('MANAGER', 'EMPLOYEE')"
+                           th:classappend="${#strings.equals(activePage, 'dashboard')} ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Dashboard
+                        </a>
+                        <!-- POS - CASHIER, MANAGER, EMPLOYEE -->
+                        <a th:href="@{/pos}" 
+                           sec:authorize="hasAnyRole('CASHIER', 'MANAGER', 'EMPLOYEE')"
+                           th:classappend="${#strings.equals(activePage, 'pos')} ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            POS
+                        </a>
+                        <!-- Products - ADMIN and MANAGER -->
+                        <a th:href="@{/products}" 
+                           sec:authorize="hasAnyRole('ADMIN', 'MANAGER')"
+                           th:classappend="${#strings.equals(activePage, 'products')} ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Products
+                        </a>
+                        <!-- Customers - MANAGER and EMPLOYEE -->
+                        <a th:href="@{/customers}" 
+                           sec:authorize="hasAnyRole('MANAGER', 'EMPLOYEE')"
+                           th:classappend="${#strings.equals(activePage, 'customers')} ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Customers
+                        </a>
+                        <!-- Inventory - ADMIN and MANAGER -->
+                        <a th:href="@{/inventory}" 
+                           sec:authorize="hasAnyRole('ADMIN', 'MANAGER')"
+                           th:classappend="${#strings.equals(activePage, 'inventory')} ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Inventory
+                        </a>
+                        <!-- Reports - MANAGER only -->
+                        <a th:href="@{/reports}" 
+                           sec:authorize="hasRole('MANAGER')"
+                           th:classappend="${#strings.equals(activePage, 'reports')} ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Reports
+                        </a>
+                        <!-- User Management - MANAGER only -->
+                        <a th:href="@{/users}" 
+                           sec:authorize="hasRole('MANAGER')"
+                           th:classappend="${#strings.equals(activePage, 'users')} ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Users
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-gray-700 mr-4" sec:authentication="name">User</span>
+                    <form th:action="@{/logout}" method="POST" class="inline">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <button type="submit" 
+                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div th:replace="${content}">Page content goes here</div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white mt-8 py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+            © 2025 Billing Software. All rights reserved.
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content}, 'customers', 'Customers')}">
+<body>
+<div th:fragment="content">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Customers</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="mb-4 flex gap-2">
+            <input type="text" id="searchQuery" placeholder="Search customers..." 
+                   class="flex-1 px-4 py-2 border border-gray-300 rounded-md">
+            <button onclick="searchCustomers()" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Search</button>
+        </div>
+        
+        <div id="customerList" class="overflow-x-auto">
+            <div class="text-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="mt-4 text-gray-600">Loading customers...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            loadCustomers();
+        });
+
+        function loadCustomers(query = '') {
+            const url = query ? '/api/customers?q=' + encodeURIComponent(query) : '/api/customers';
+            $.get(url).done(function(customers) {
+                let html = '<table class="min-w-full divide-y divide-gray-200">';
+                html += '<thead class="bg-gray-50"><tr>';
+                html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>';
+                html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>';
+                html += '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>';
+                html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+                
+                customers.forEach(function(c) {
+                    html += '<tr>';
+                    html += '<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">' + c.name + '</td>';
+                    html += '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' + c.phone + '</td>';
+                    html += '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' + (c.email || '-') + '</td>';
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table>';
+                $('#customerList').html(html);
+            });
+        }
+
+        function searchCustomers() {
+            loadCustomers($('#searchQuery').val());
+        }
+    </script>
+</div>
+</body>
+</html>

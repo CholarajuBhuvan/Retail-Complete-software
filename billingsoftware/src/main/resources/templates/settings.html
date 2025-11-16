@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:replace="~{layout :: layout(~{::content}, 'settings', 'Settings')}">
+<body>
+<div th:fragment="content">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Settings</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">User Information</h2>
+        <div class="space-y-3">
+            <p><span class="font-medium">Username:</span> <span sec:authentication="name"></span></p>
+            <p><span class="font-medium">Role:</span> <span sec:authentication="principal.authorities"></span></p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 mt-6">
+        <h2 class="text-xl font-bold mb-4">Application Information</h2>
+        <div class="space-y-3">
+            <p><span class="font-medium">Version:</span> 1.0.0</p>
+            <p><span class="font-medium">Technology:</span> Java Spring Boot</p>
+            <p><span class="font-medium">Database:</span> H2 (In-Memory)</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

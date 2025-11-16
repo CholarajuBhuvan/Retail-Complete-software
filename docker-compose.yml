@@ -1,0 +1,29 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16
+    container_name: billing-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: billingdb
+      POSTGRES_USER: billing
+      POSTGRES_PASSWORD: billing
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  app:
+    build: .
+    image: billing-app:latest
+    depends_on:
+      - db
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/billingdb
+      - SPRING_DATASOURCE_USERNAME=billing
+      - SPRING_DATASOURCE_PASSWORD=billing
+    ports:
+      - "8082:8082"
+volumes:
+  pgdata:
+
